@@ -28,11 +28,12 @@ sub find_server {
 			next unless has_key($keys, $name);
 			my ($host, @args) = split ' ', $conf;
 			set_user($host) if $type eq 'ssh';
-			my @cmd = parse_args(@args);
+			my ($cmnd, @rargs) = parse_args(@args);
 			return {
 				host => $host,
 				type => $type,
-				args => \@cmd,
+				args => \@rargs,
+				cmnd => $cmnd,
 			};
 		}
 	}
@@ -55,30 +56,33 @@ sub set_user {
 
 
 sub parse_args {
-	my @cmd;
+	my @args;
+	my $cmnd = "";
 	for my $arg (@_) {
-		if (my ($flag) = $arg =~ /^:(\w+)/) {
-			$arg = $config->{flags}{$flag};
-			warn "Unknown flag :$flag\n" unless defined $arg;
+		if (my ($key) = $arg =~ /^:(\w+)/) {
+			$arg = $config->{flags}{$key};
+			$cmnd .= my $cmd = $config->{commands}{$key} unless defined $arg;
+			warn "Unknown flag or command :$key\n" unless defined ($arg || $cmd);
 		}
-		push @cmd, $arg if defined $arg;
+		push @args, $arg if defined $arg;
 	}
-	return @cmd;
+	return $cmnd, @args;
 }
 
 
 sub parse_command_line {
 	my ($flags_ref, $paths_ref, %opt) = separate_flags_and_paths(@_);
 
-	my ($bin, @paths);
+	my ($bin, @paths, $cmnd);
 	if (!@$paths_ref) {
 		usage();
 	} elsif (@$paths_ref > 1) {
 		($bin, @paths) = bin_and_paths_for_copy(@$paths_ref);
 	} else {
 		($bin, @paths) = bin_and_server_for_connection(@$paths_ref);
+		$cmnd = pop @paths;
 	}
-	my @cmd = ($bin, @$flags_ref, @paths);
+	my @cmd = ($bin, @$flags_ref, @paths, $cmnd);
 
 	if ($opt{show_cmd}) {
 		print "@cmd\n";
@@ -122,7 +126,7 @@ sub bin_and_paths_for_copy {
 
 sub bin_and_server_for_connection {
 	my $server = find_server(@_);
-	return $server->{type}, @{$server->{args}}, $server->{host};
+	return $server->{type}, @{$server->{args}}, $server->{host}, $server->{cmnd};
 }
 
 

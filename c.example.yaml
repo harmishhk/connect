@@ -9,6 +9,11 @@ flags:
     # https://github.com/aurora/rmate & https://sublime.wbond.net/packages/rsub
     rmate: -R52698:127.0.0.1:52698
 
+# aliases for ssh commands
+commands:
+    # change a variable after login
+    chome: HOME=/new/home; exec /bin/bash;
+
 # list of SSH servers
 # shortcut  [user@]address  flags
 ssh:
@@ -23,6 +28,9 @@ ssh:
 
     # pass additional flags
     gw: gw.example.com :rmate -A -p 22000
+
+    # pass additional commands
+    shared: shared@server.com :chome
 
 # list of Telnet servers
 # shortcut  address
