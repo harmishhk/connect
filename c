@@ -74,15 +74,17 @@ sub parse_command_line {
 	my ($flags_ref, $paths_ref, %opt) = separate_flags_and_paths(@_);
 
 	my ($bin, @paths, $cmnd);
+	my @cmd;
 	if (!@$paths_ref) {
 		usage();
 	} elsif (@$paths_ref > 1) {
 		($bin, @paths) = bin_and_paths_for_copy(@$paths_ref);
+		@cmd = ($bin, @$flags_ref, @paths);
 	} else {
 		($bin, @paths) = bin_and_server_for_connection(@$paths_ref);
 		$cmnd = pop @paths;
+		@cmd = ($bin, @$flags_ref, @paths, $cmnd);
 	}
-	my @cmd = ($bin, @$flags_ref, @paths, $cmnd);
 
 	if ($opt{show_cmd}) {
 		print "@cmd\n";
